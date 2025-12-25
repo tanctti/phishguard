@@ -1,5 +1,5 @@
 // background.js
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://phishguard-a43g.onrender.com";
 
 function extractFirstURL(text) {
   if (!text) return null;
@@ -84,3 +84,4 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 });
+
