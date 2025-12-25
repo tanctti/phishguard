@@ -227,3 +227,4 @@ def analyze_headers(req: HeadersRequest):
 @app.get("/")
 def read_root():
     return {"message": "PhishGuard Analyzer is running."}
+
