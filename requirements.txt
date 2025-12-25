@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic
+beautifulsoup4
+python-whois
+tldextract
+httpx
+python-dotenv
+Levenshtein
+pymorphy2==0.9.1
+pymorphy2-dicts-ru
+DAWG-Python
