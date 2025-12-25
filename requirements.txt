@@ -10,3 +10,5 @@ Levenshtein
 pymorphy2==0.9.1
 pymorphy2-dicts-ru
 DAWG-Python
+setuptools<81
+
