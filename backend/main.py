@@ -26,7 +26,7 @@ trusted_origins = [
     "https://mail.yahoo.com",
     "https://mail.yandex.ru",
     # Убедись, что ID совпадает с твоим расширением
-    "chrome-extension://gjiocbpbjkfhgbgjijpamnpdmggmaaao",
+    "chrome-extension://hejgiiojobkcdjghpjinknbkikpmpfpc",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -227,4 +227,5 @@ def analyze_headers(req: HeadersRequest):
 @app.get("/")
 def read_root():
     return {"message": "PhishGuard Analyzer is running."}
+
 
