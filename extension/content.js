@@ -1,5 +1,4 @@
-// content.js — Финальная версия (единый голубо‑фиолетовый стиль, без эмодзи, цветные метки, tooltip в том же стиле)
-
+// content.js
 // --- Утилиты ---
 function escapeHTML(s) {
     return (s || "").toString()
@@ -359,3 +358,4 @@ if (document.readyState === 'loading') {
 } else {
     initialize();
 }
+
