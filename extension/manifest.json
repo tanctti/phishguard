@@ -1,20 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "PhishGuard (Local API)",
-  "version": "0.4.0",
-  "description": "Проверяет ссылку/выделенный текст через локальный API на 127.0.0.1:8000.",
+  "name": "PhishGuard",
+  "version": "0.1.0",
+  "description": "Проверяет ссылку/выделенный текст ваших электронных писем на фишинг.",
   "permissions": ["contextMenus", "activeTab", "scripting"],
-  "host_permissions": ["https://phishguard-a43g.onrender.com"],
+  "host_permissions": ["https://phishguard-a43g.onrender.com/*"],
   "background": {
     "service_worker": "background.js"
   },
   "action": { "default_title": "PhishGuard" },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://mail.yahoo.com/*",
+        "https://mail.yandex.ru/*"
+      ],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
   ]
 }
-
