@@ -2,13 +2,29 @@
   "manifest_version": 3,
   "name": "PhishGuard",
   "version": "0.1.0",
-  "description": "Проверяет ссылку/выделенный текст ваших электронных писем на фишинг.",
+  "description": "Проверяет ссылку/выделенный текст на фишинг.",
   "permissions": ["contextMenus", "activeTab", "scripting"],
   "host_permissions": ["https://phishguard-a43g.onrender.com/*"],
+
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+
   "background": {
     "service_worker": "background.js"
   },
-  "action": { "default_title": "PhishGuard" },
+
+  "action": {
+    "default_title": "PhishGuard",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+
   "content_scripts": [
     {
       "matches": [
