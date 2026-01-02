@@ -1,10 +1,6 @@
 # backend/brands.py
-
 # Список известных брендов, которые часто становятся целью для тайпсквоттинга.
-# Убраны только короткие (≤4 символов), дубликаты и названия с пробелами/спецсимволами.
-
-KNOWN_BRANDS = [
-    # === Глобальные технологические компании ===
+KNOWN_BRANDS = [ 
     "google",
     "facebook",
     "instagram",
@@ -26,20 +22,12 @@ KNOWN_BRANDS = [
     "steam",
     "twitch",
     "discord",
-
-    # === Игровые компании ===
     "blizzard",
     "riotgames",
     "epicgames",
-
-    # === Финансы и криптовалюты ===
     "binance",
-
-    # === Путешествия и сервисы ===
     "booking",
     "airbnb",
-
-    # === Российские нефтегазовые компании ===
     "gazprom",
     "lukoil",
     "rosneft",
@@ -47,16 +35,12 @@ KNOWN_BRANDS = [
     "bashneft",
     "novatek",
     "surgutneftegas",
-
-    # === Российские телеком ===
     "yandex",
     "mailgroup",
     "rostelecom",
     "megafon",
     "tele2",
     "beeline",
-
-    # === Российские банки ===
     "sberbank",
     "tinkoff",
     "raiffeisen",
@@ -75,8 +59,6 @@ KNOWN_BRANDS = [
     "vtbcapital",
     "russianagriculturalbank",
     "mtsbank",
-
-    # === Российские маркетплейсы и ритейл ===
     "wildberries",
     "ozon",
     "lamoda",
@@ -91,8 +73,6 @@ KNOWN_BRANDS = [
     "magnit",
     "avito",
     "youdo",
-
-    # === Российская авиация ===
     "sukhoi",
     "aeroflot",
     "s7airlines",
@@ -101,8 +81,6 @@ KNOWN_BRANDS = [
     "nordwind",
     "utair",
     "transaero",
-
-    # === Российская оборонка и машиностроение ===
     "kaspersky",
     "avtovaz",
     "kamaz",
@@ -110,8 +88,6 @@ KNOWN_BRANDS = [
     "kalashnikov",
     "uralvagonzavod",
     "rostec",
-
-    # === Российская химия и металлургия ===
     "sibur",
     "nornickel",
     "rusal",
@@ -126,11 +102,7 @@ KNOWN_BRANDS = [
     "kazanorgsintez",
     "ufaorgsintez",
     "salavatnefteorgsintez",
-
-    # === Российская металлургия и трубы ===
     "vsmpoavisma",
-
-    # === Российский космос ===
     "roscosmos",
     "energia",
     "lavochkin",
@@ -140,8 +112,6 @@ KNOWN_BRANDS = [
     "vostochny",
     "glavkosmos",
     "gazpromspacesystems",
-
-    # === Российская оборонка (корпорации) ===
     "almazantey",
     "tacticalmissilescorporation",
     "unitedaircraftcorporation",
@@ -151,13 +121,9 @@ KNOWN_BRANDS = [
     "saturn",
     "ruselectronics",
     "shvabe",
-
-    # === Атомная отрасль ===
     "rosatom",
     "atomenergomash",
     "tenex",
-
-    # === Российские СМИ ===
     "gazprommedia",
     "nationalmediagroup",
     "ctcmedia",
@@ -169,16 +135,12 @@ KNOWN_BRANDS = [
     "vedomosti",
     "gazeta",
     "rambler",
-
-    # === Российский транспорт и логистика ===
     "russianrailways",
     "transcontainer",
     "globaltrans",
     "fesco",
     "novorossiyskcommercialseaport",
     "sovcomflot",
-
-    # === Российское золото и алмазы ===
     "gvgold",
     "polyus",
     "petropavlovsk",
@@ -186,8 +148,6 @@ KNOWN_BRANDS = [
     "lenzoloto",
     "alrosa",
     "crocus",
-
-    # === Российские продукты и напитки ===
     "cherkizovo",
     "rusagro",
     "miratorg",
@@ -201,8 +161,6 @@ KNOWN_BRANDS = [
     "russkystandart",
     "russianstandard",
     "baltika",
-
-    # === Социальные сети ===
     "odnoklassniki",
     "profiles",
 ]
