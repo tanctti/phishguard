@@ -5,7 +5,6 @@ from bs4 import BeautifulSoup
 import tldextract
 from .schemas import CheckResult
 
-# Дублируем список из url_analyzer, чтобы избежать циклического импорта
 SUSPICIOUS_TLDS = {
     "live", "top", "xyz", "site", "online", "club", "click", "link",
     "cam", "buzz", "space", "fun", "pw", "work", "shop", "rest", "fit",
@@ -33,7 +32,7 @@ async def analyze_page_content(url: str):
     ext = tldextract.extract(url)
     current_registrable = f"{ext.domain}.{ext.suffix}" if ext.suffix else ext.domain
 
-    # 1) Наличие формы пароля
+    # 1) Наличие формы ввода пароля
     pwd_inputs = soup.find_all('input', {'type': 'password'})
     if pwd_inputs:
         results.append(CheckResult(
