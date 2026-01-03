@@ -1,4 +1,3 @@
-# backend/heuristic_model.py
 from .schemas import CheckResult
 
 # Веса признаков (эвристика)
@@ -35,11 +34,47 @@ FEATURE_WEIGHTS = {
     'exec_download_links': 35,
     'hidden_iframes': 15,
 
-    # --- НОВЫЕ ВЕСА ДЛЯ EMAIL-ЗАГОЛОВКОВ ---
-    'header_spf_fail': 30,         # Сбой SPF - серьезный признак подделки
-    'header_dkim_fail': 25,        # Сбой DKIM - признак того, что письмо было изменено
-    'header_dmarc_fail': 35,       # Сбой DMARC - домен явно не разрешает такую отправку
-    'header_mismatch': 40,         # Несоответствие адресов From и Return-Path - классика фишинга
+    # Email-заголовки
+    'header_spf_fail': 30,
+    'header_dkim_fail': 25,
+    'header_dmarc_fail': 35,
+    'header_mismatch': 40,
+}
+
+# Человеко-понятные названия признаков (для отчёта)
+FEATURE_LABELS_RU = {
+    'is_new_domain': 'Новый домен (молодой возраст)',
+    'is_punycode': 'Punycode/омографическая маскировка',
+    'has_at_symbol': 'Символ @ в URL',
+    'is_long_url': 'Слишком длинный URL',
+    'has_password_form': 'Форма ввода пароля на странице',
+    'is_http': 'Незащищённый протокол HTTP',
+    'is_typesquatting': 'Тайпсквоттинг (похож на бренд)',
+    'in_google_blacklist': 'Найдено в базе Google Safe Browsing',
+    'has_text_triggers': 'Социальная инженерия в тексте (триггеры)',
+
+    'has_ip_in_url': 'IP-адрес вместо домена',
+    'has_non_standard_port': 'Нестандартный порт в URL',
+    'is_suspicious_tld': 'Подозрительная доменная зона (TLD)',
+    'has_suspicious_subdomain': 'Подозрительный поддомен (приманки)',
+    'looks_random_domain': 'Случайное/аббревиатурное имя домена',
+    'short_registration_period': 'Короткий срок регистрации домена',
+    'has_suspicious_path_keywords': 'Подозрительные слова в пути/параметрах',
+    'has_excessive_redirects': 'Подозрительная цепочка редиректов',
+
+    'in_urlhaus_blacklist': 'Найдено в базе URLHaus',
+    'tls_issues': 'Проблемы TLS/сертификата',
+    'no_hsts': 'Нет HSTS',
+
+    'form_action_mismatch': 'Форма отправляет данные на другой домен',
+    'external_scripts_suspicious': 'Подозрительные внешние скрипты',
+    'exec_download_links': 'Ссылки на исполняемые файлы',
+    'hidden_iframes': 'Скрытые iframe',
+
+    'header_spf_fail': 'SPF не прошёл проверку',
+    'header_dkim_fail': 'DKIM не прошёл проверку',
+    'header_dmarc_fail': 'DMARC не прошёл проверку',
+    'header_mismatch': 'Несоответствие From / Reply-To / Return-Path',
 }
 
 
@@ -53,15 +88,15 @@ def predict_phishing_probability(features: dict) -> CheckResult:
             weight = FEATURE_WEIGHTS.get(feature_name, 0)
             if weight > 0:
                 phishing_score += weight
-                activated_factors.append(f"{feature_name} (+{weight})")
-
+                label = FEATURE_LABELS_RU.get(feature_name, feature_name)  # fallback на ключ
+                activated_factors.append((label, weight))
 
     # Базовая вероятностная оценка
     baseline = 70
     probability = int(100 * (phishing_score / (phishing_score + baseline))) if phishing_score > 0 else 0
     probability = min(probability, 99)
 
-    # Усиливаем "критические комбинации":
+    # Усиливаем "критические комбинации"
     critical_flags = [
         features.get('has_suspicious_subdomain', False),
         features.get('is_suspicious_tld', False),
@@ -79,10 +114,14 @@ def predict_phishing_probability(features: dict) -> CheckResult:
 
     is_suspicious = probability > 50
 
-    details = f"heuristic-модель оценила вероятность фишинга в {probability}%."
+    # Формируем человеко-понятное описание
+    details = f"Эвристическая модель оценила вероятность фишинга в {probability}%."
     if activated_factors and probability > 30:
-        details += f" Основные факторы: {', '.join(activated_factors)}."
-
+        # Сортируем по весу, чтобы в отчёте были самые важные причины
+        activated_factors.sort(key=lambda x: x[1], reverse=True)
+        top = activated_factors[:6]  # можно показывать не все, чтобы не было “простыни”
+        factors_str = ", ".join([f"{name} (+{w})" for name, w in top])
+        details += f" Основные факторы: {factors_str}."
 
     return CheckResult(
         check_name="Heuristic Analysis",
