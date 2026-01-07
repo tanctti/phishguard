@@ -1,9 +1,9 @@
 # backend/main.py
 
 import asyncio
-from dotenv import load_dotenv  # 1. Импорт
+from dotenv import load_dotenv
 
-load_dotenv()  # 2. Загрузка ДО импортов модулей!
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +25,6 @@ trusted_origins = [
     "https://outlook.office.com",
     "https://mail.yahoo.com",
     "https://mail.yandex.ru",
-    # Убедись, что ID совпадает с твоим расширением
     "chrome-extension://hejgiiojobkcdjghpjinknbkikpmpfpc",
 ]
 app.add_middleware(
@@ -51,7 +50,7 @@ async def analyze_request(request: AnalysisRequest):
     if not url and not text and not raw_headers:
         raise HTTPException(status_code=400, detail="Необходимо предоставить url, текст или заголовки для анализа.")
 
-    # --- 1. Анализ текста и поиск в нем заголовков ---
+    # Анализ текста и поиск в нем заголовков
     if text:
         text_res = text_analyzer.analyze_email_text(text)
         results.append(text_res)
@@ -97,13 +96,13 @@ async def analyze_request(request: AnalysisRequest):
     else:
         text_res = CheckResult(check_name="Text Analysis", is_suspicious=False, details="Текст не предоставлен.")
 
-    # --- 2. Анализ переданных raw_headers ---
-    # Запускаем, только если заголовки пришли отдельно И мы их еще не нашли в тексте
+    # Анализ переданных raw_headers
+    # Запускаем, только если заголовки пришли отдельно и мы их еще не нашли в тексте
     if request.raw_headers and not is_header_found_in_text:
         headers_res = analyze_email_headers(request.raw_headers)
         results.append(headers_res)
 
-    # --- 3. Анализ URL ---
+    #  Анализ URL
     if url:
         # Синхронные проверки
         reg_age_res = url_analyzer.check_domain_age(url)
@@ -137,7 +136,7 @@ async def analyze_request(request: AnalysisRequest):
         results.extend([gsb_res, redirects_res, hsts_res, urlhaus_res])
         results.extend(content_results)
 
-        # Признаки для ML из URL
+        # Признаки из URL
         is_punycode = lexical_res.check_name == "Punycode" and lexical_res.is_suspicious
         has_at_symbol = lexical_res.check_name == "URL Symbols" and lexical_res.is_suspicious
         is_long_url = lexical_res.check_name == "URL Length" and lexical_res.is_suspicious
@@ -176,7 +175,7 @@ async def analyze_request(request: AnalysisRequest):
             'has_text_triggers': text_res.is_suspicious,
         }
 
-    # --- 4. Признаки заголовков для ML ---
+    #Признаки заголовков
     # Ищем результат анализа заголовков в общем списке (он уже добавлен выше)
     header_check_results = next((r for r in results if r.check_name.startswith("Email Headers")), None)
 
@@ -189,11 +188,11 @@ async def analyze_request(request: AnalysisRequest):
             'header_mismatch': 'несоответствие' in details_lower,
         })
 
-    # --- ML-результат ---
+    # Результат
     heuristic_result = heuristic_model.predict_phishing_probability(features_for_heuristic)
     results.append(heuristic_result)
 
-    # --- Вердикт ---
+    # Вердикт
     try:
         score_str = heuristic_result.details.split(' в ')[1].split('%')[0]
         score = int(score_str)
@@ -227,5 +226,3 @@ def analyze_headers(req: HeadersRequest):
 @app.get("/")
 def read_root():
     return {"message": "PhishGuard Analyzer is running."}
-
-
