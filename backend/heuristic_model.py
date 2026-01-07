@@ -41,7 +41,7 @@ FEATURE_WEIGHTS = {
     'header_mismatch': 40,
 }
 
-# Человеко-понятные названия признаков (для отчёта)
+# Названия признаков для отчёта
 FEATURE_LABELS_RU = {
     'is_new_domain': 'Новый домен (молодой возраст)',
     'is_punycode': 'Punycode/омографическая маскировка',
@@ -88,7 +88,7 @@ def predict_phishing_probability(features: dict) -> CheckResult:
             weight = FEATURE_WEIGHTS.get(feature_name, 0)
             if weight > 0:
                 phishing_score += weight
-                label = FEATURE_LABELS_RU.get(feature_name, feature_name)  # fallback на ключ
+                label = FEATURE_LABELS_RU.get(feature_name, feature_name)
                 activated_factors.append((label, weight))
 
     # Базовая вероятностная оценка
@@ -114,12 +114,12 @@ def predict_phishing_probability(features: dict) -> CheckResult:
 
     is_suspicious = probability > 50
 
-    # Формируем человеко-понятное описание
+    # Формируем описание
     details = f"Эвристическая модель оценила вероятность фишинга в {probability}%."
     if activated_factors and probability > 30:
         # Сортируем по весу, чтобы в отчёте были самые важные причины
         activated_factors.sort(key=lambda x: x[1], reverse=True)
-        top = activated_factors[:6]  # можно показывать не все, чтобы не было “простыни”
+        top = activated_factors[:6]
         factors_str = ", ".join([f"{name} (+{w})" for name, w in top])
         details += f" Основные факторы: {factors_str}."
 
