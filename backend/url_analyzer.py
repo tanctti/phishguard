@@ -1,4 +1,3 @@
-# backend/url_analyzer.py
 import os
 import re
 import socket
@@ -71,7 +70,12 @@ def get_port(url: str):
 
 
 def check_domain_age(url: str) -> CheckResult:
-    """Проверяет возраст домена. Новые домены подозрительны."""
+    """
+    Проверяет возраст домена по WHOIS.
+
+    ВАЖНО: если WHOIS недоступен/не найден/ошибка, это НЕ считается подозрительным,
+    чтобы не завышать риск на "неизвестных" доменах и тестовых TLD.
+    """
     try:
         _, registrable = _extract(url)
         domain_info = whois.whois(registrable)
@@ -85,13 +89,27 @@ def check_domain_age(url: str) -> CheckResult:
                 return CheckResult(
                     check_name="Domain Age",
                     is_suspicious=True,
-                    details=f"Домен очень новый! Он существует всего {age} дней. Это частый признак фишинга."
+                    details=f"Домен очень новый: {age} дней. Это частый признак фишинга."
                 )
-            return CheckResult(check_name="Domain Age", is_suspicious=False, details=f"Домен существует {age} дней.")
+            return CheckResult(
+                check_name="Domain Age",
+                is_suspicious=False,
+                details=f"Возраст домена: {age} дней."
+            )
+
+        # WHOIS ответил, но даты нет
+        return CheckResult(
+            check_name="Domain Age",
+            is_suspicious=False,
+            details="WHOIS не содержит дату создания домена (возраст домена определить не удалось)."
+        )
+
     except Exception as e:
-        return CheckResult(check_name="Domain Age", is_suspicious=True,
-                           details=f"Не удалось получить информацию о домене: {e}")
-    return CheckResult(check_name="Domain Age", is_suspicious=False, details="Информация о возрасте домена не найдена.")
+        return CheckResult(
+            check_name="Domain Age",
+            is_suspicious=False,
+            details=f"Возраст домена определить не удалось (WHOIS недоступен/ошибка): {e}"
+        )
 
 
 def check_short_registration_period(url: str) -> CheckResult:
@@ -118,19 +136,19 @@ def check_short_registration_period(url: str) -> CheckResult:
             return CheckResult(
                 check_name="Registration Term",
                 is_suspicious=False,
-                details=f"Срок регистрации домена нормальный: {term_days} дней."
+                details=f"Срок регистрации домена: {term_days} дней."
             )
 
         return CheckResult(
             check_name="Registration Term",
             is_suspicious=False,
-            details="Не удалось определить срок регистрации (WHOIS неполный)."
+            details="WHOIS не содержит полной информации о сроке регистрации домена."
         )
     except Exception as e:
         return CheckResult(
             check_name="Registration Term",
             is_suspicious=False,
-            details=f"Не удалось получить данные WHOIS о сроке регистрации: {e}"
+            details=f"Срок регистрации определить не удалось (WHOIS недоступен/ошибка): {e}"
         )
 
 
@@ -147,7 +165,7 @@ def check_lexical_features(url: str) -> CheckResult:
                            details="URL содержит символ '@', что может вводить в заблуждение.")
     if domain.startswith("xn--"):
         return CheckResult(check_name="Punycode", is_suspicious=True,
-                           details="URL использует Punycode, что может скрывать поддельный домен (омографическая атака).")
+                           details="URL использует Punycode — возможна омографическая атака.")
 
     return CheckResult(check_name="Lexical Analysis", is_suspicious=False,
                        details="Подозрительных лексических признаков не найдено.")
@@ -164,11 +182,14 @@ def check_typesquatting(url: str) -> CheckResult:
                 return CheckResult(
                     check_name="Typesquatting Alert",
                     is_suspicious=True,
-                    details=f"Домен '{domain}' очень похож на известный бренд '{brand}'. Высокий риск фишинга!"
+                    details=f"Домен '{domain}' похож на бренд '{brand}'. Высокий риск фишинга!"
                 )
-    except Exception:
-        return CheckResult(check_name="Typesquatting Alert", is_suspicious=False,
-                           details="Анализ на тайпсквоттинг не удался.")
+    except Exception as e:
+        return CheckResult(
+            check_name="Typesquatting Alert",
+            is_suspicious=False,
+            details=f"Анализ на тайпсквоттинг не удался: {e}"
+        )
 
     return CheckResult(check_name="Typesquatting Alert", is_suspicious=False,
                        details="Признаков тайпсквоттинга не обнаружено.")
@@ -186,7 +207,7 @@ def check_suspicious_subdomain(url: str) -> CheckResult:
         return CheckResult(
             check_name="Subdomain Analysis",
             is_suspicious=True,
-            details=f"В субдомене обнаружены приманки: {', '.join(matched)}. Это часто используется в фишинге."
+            details=f"В субдомене обнаружены приманки: {', '.join(matched)}."
         )
     return CheckResult(check_name="Subdomain Analysis", is_suspicious=False, details="Подозрительных слов в субдомене нет.")
 
@@ -199,13 +220,13 @@ def check_suspicious_tld(url: str) -> CheckResult:
         return CheckResult(
             check_name="TLD Reputation",
             is_suspicious=True,
-            details=f"TLD '.{tld}' часто используется в мошеннических схемах. Будьте осторожны."
+            details=f"TLD '.{tld}' часто используется в мошеннических схемах."
         )
     return CheckResult(check_name="TLD Reputation", is_suspicious=False, details=f"TLD '.{tld}' не в списке часто злоупотребляемых.")
 
 
 def check_random_looking_domain(url: str) -> CheckResult:
-    """Выявляет 'рандомные'/аббревиатурные домены (короткие, мало гласных), напр. 'pfm'."""
+    """Выявляет 'рандомные'/аббревиатурные домены."""
     extracted = tldextract.extract(url)
     core = extracted.domain.lower()
     if not core:
@@ -217,7 +238,7 @@ def check_random_looking_domain(url: str) -> CheckResult:
         return CheckResult(
             check_name="Domain Pattern",
             is_suspicious=True,
-            details=f"Основной домен выглядит как аббревиатура ('{core}', гласных {vowel_count}/{len(core)})."
+            details=f"Домен выглядит как аббревиатура ('{core}', гласных {vowel_count}/{len(core)})."
         )
     return CheckResult(check_name="Domain Pattern", is_suspicious=False, details=f"Паттерн домена выглядит естественно ('{core}').")
 
@@ -234,7 +255,7 @@ def check_protocol(url: str) -> CheckResult:
             )
         return CheckResult(check_name="Protocol", is_suspicious=False, details=f"Протокол: {scheme.upper()}.")
     except Exception as e:
-        return CheckResult(check_name="Protocol", is_suspicious=True, details=f"Не удалось определить протокол: {e}")
+        return CheckResult(check_name="Protocol", is_suspicious=False, details=f"Не удалось определить протокол: {e}")
 
 
 def check_ip_or_port(url: str) -> CheckResult:
@@ -268,7 +289,7 @@ def check_path_indicators(url: str) -> CheckResult:
 
     base64_hits = BASE64_LIKE_REGEX.findall(p.path + "?" + p.query if p.query else p.path)
     long_query = len(p.query) > 200
-    many_params = p.query.count("&") + p.query.count("=") > 12 if p.query else False
+    many_params = (p.query.count("&") + p.query.count("=") > 12) if p.query else False
 
     issues = []
     if matched:
@@ -295,20 +316,18 @@ async def check_redirects(url: str) -> CheckResult:
             if steps == 0:
                 return CheckResult(check_name="Redirects", is_suspicious=False, details="Редиректы отсутствуют.")
 
-            # Сбор доменов по цепочке
             domains = []
             for h in history:
                 loc = h.headers.get("location")
                 if loc:
                     try:
-                        ext, reg = _extract(loc)
+                        _, reg = _extract(loc)
                         if reg:
                             domains.append(reg)
                     except Exception:
                         pass
-            # Добавляем финальный домен
             try:
-                ext_final, reg_final = _extract(str(resp.url))
+                _, reg_final = _extract(str(resp.url))
                 if reg_final:
                     domains.append(reg_final)
             except Exception:
@@ -340,7 +359,6 @@ def check_tls_certificate(url: str) -> CheckResult:
 
     try:
         ctx = ssl.create_default_context()
-        # Устанавливаем таймаут и оборачиваем сокет
         with socket.create_connection((host, port or 443), timeout=5) as sock:
             with ctx.wrap_socket(sock, server_hostname=host) as ssock:
                 cert = ssock.getpeercert()
@@ -353,13 +371,9 @@ def check_tls_certificate(url: str) -> CheckResult:
         not_before = cert.get("notBefore")
         san = [v for (k, v) in cert.get("subjectAltName", []) if k == "DNS"]
 
-        # Надежное извлечение Common Name (CN)
         cn = None
         subject = cert.get("subject", [])
         for item in subject:
-            # subject - это список RDN (Relative Distinguished Names).
-            # Каждый RDN - это кортеж кортежей атрибутов.
-            # Обычно: ((('commonName', 'example.com'),),)
             for attribute in item:
                 if attribute[0] == 'commonName':
                     cn = attribute[1]
@@ -370,8 +384,6 @@ def check_tls_certificate(url: str) -> CheckResult:
         fmt = "%b %d %H:%M:%S %Y %Z"
         now = datetime.now(timezone.utc)
 
-        days_to_exp = None
-        days_since_issue = None
         issues = []
         suspicious = False
 
@@ -383,7 +395,7 @@ def check_tls_certificate(url: str) -> CheckResult:
                     issues.append(f"Сертификат скоро истекает (через {days_to_exp} дней)")
                     suspicious = True
             except ValueError:
-                pass  # Ошибка парсинга даты
+                pass
 
         if not_before:
             try:
@@ -395,8 +407,6 @@ def check_tls_certificate(url: str) -> CheckResult:
             except ValueError:
                 pass
 
-        # Проверка соответствия хосту
-        # SAN (Subject Alternative Name) - основной способ проверки в современном Web
         host_in_san = False
         if san:
             host_in_san = any(
@@ -405,14 +415,14 @@ def check_tls_certificate(url: str) -> CheckResult:
                 for h in san
             )
 
-        # Если в SAN нет, проверяем CN (устаревший метод, но иногда нужен)
         host_matches_cn = False
         if cn:
             host_matches_cn = (cn.lower() == host.lower()) or (
-                        cn.startswith("*.") and host.lower().endswith(cn[1:].lower()))
+                cn.startswith("*.") and host.lower().endswith(cn[1:].lower())
+            )
 
         if not host_in_san and not host_matches_cn:
-            issues.append(f"Имя хоста '{host}' не найдено в сертификате (CN: {cn}, SAN: {san})")
+            issues.append(f"Имя хоста '{host}' не найдено в сертификате (CN: {cn})")
             suspicious = True
 
         if not issues:
@@ -422,16 +432,20 @@ def check_tls_certificate(url: str) -> CheckResult:
         return CheckResult(check_name="TLS Certificate", is_suspicious=suspicious, details="; ".join(issues))
 
     except Exception as e:
-        # Ловим ошибку, чтобы не положить весь анализ, но сообщаем о ней
         return CheckResult(check_name="TLS Certificate", is_suspicious=True,
                            details=f"Ошибка проверки сертификата: {e}")
 
 
 async def check_hsts(url: str) -> CheckResult:
-    """Проверяет наличие заголовка HSTS на HTTPS."""
+    """
+    Проверяет наличие заголовка HSTS на HTTPS.
+
+    ВАЖНО: если URL НЕ https, HSTS НЕ применим => НЕ считаем это подозрительным,
+    чтобы не завышать итоговую оценку.
+    """
     p = urlparse(url)
     if p.scheme != "https":
-        return CheckResult(check_name="HSTS", is_suspicious=True, details="HSTS не применим без HTTPS.")
+        return CheckResult(check_name="HSTS", is_suspicious=False, details="HSTS не применим без HTTPS.")
     try:
         async with httpx.AsyncClient(follow_redirects=True, timeout=10) as client:
             r = await client.get(url)
