@@ -1,5 +1,6 @@
 // content.js
-// --- Утилиты ---
+
+// Утилиты
 function escapeHTML(s) {
     return (s || "").toString()
         .replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -7,7 +8,7 @@ function escapeHTML(s) {
         .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
-// --- Связь с background.js для выполнения анализа ---
+//Связь с background.js для выполнения анализа
 async function analyzeViaBackground(payload) { // payload: {url, text?}
     return new Promise((resolve) => {
         chrome.runtime.sendMessage({ type: "ANALYZE_REQUEST", payload }, (resp) => {
@@ -21,7 +22,7 @@ async function analyzeViaBackground(payload) { // payload: {url, text?}
     });
 }
 
-// --- UI: Основной оверлей для отчета ---
+//UI: Основной оверлей для отчета
 let overlay = null;
 
 function ensureOverlay() {
@@ -213,7 +214,7 @@ chrome.runtime.onMessage.addListener((msg) => {
 });
 
 
-// --- Подсказка возле ссылок (tooltip) ---
+// Подсказка возле ссылок (tooltip)
 let tooltip, currentLink, hideTooltipTimeout;
 
 function createTooltip() {
@@ -358,4 +359,3 @@ if (document.readyState === 'loading') {
 } else {
     initialize();
 }
-
